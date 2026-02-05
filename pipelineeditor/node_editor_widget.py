@@ -8,6 +8,7 @@ from pipelineeditor.node_scene import Scene, InvalidFile
 from pipelineeditor.node_edge import Edge
 
 from pipelineeditor.graphics.node_graphics_view import QDMGraphicsView
+from pipelineeditor.graphics.node_graphics_minimap import QDMMinimapPanel
 
 
 class NodeEditorWidget(QWidget):
@@ -17,6 +18,7 @@ class NodeEditorWidget(QWidget):
         super().__init__(parent)
 
         self.filename = None
+        self._minimap_enabled = True
         self.initUI()
 
     def initUI(self):
@@ -29,7 +31,34 @@ class NodeEditorWidget(QWidget):
         self.view = QDMGraphicsView(self.scene.gr_scene, self)
         self.layout.addWidget(self.view)
 
+        # Create minimap panel with legend (pass data scene, not graphics scene)
+        self.minimap = QDMMinimapPanel(self.scene, self.view, self)
+        self._positionMinimap()
+
         self.scene.gr_scene.scene.history.store_history("Init scene")
+
+    def _positionMinimap(self):
+        """Position the minimap in the top-right corner."""
+        if hasattr(self, 'minimap'):
+            margin = 10
+            x = self.width() - self.minimap.width() - margin
+            y = margin
+            self.minimap.move(x, y)
+            self.minimap.raise_()  # Keep on top
+
+    def resizeEvent(self, event):
+        """Handle resize to reposition minimap."""
+        super().resizeEvent(event)
+        self._positionMinimap()
+
+    def setMinimapEnabled(self, enabled):
+        """Show or hide the minimap."""
+        self._minimap_enabled = enabled
+        self.minimap.setVisible(enabled)
+
+    def isMinimapEnabled(self):
+        """Check if minimap is enabled."""
+        return self._minimap_enabled
 
     def fileLoad(self, fname):
         QApplication.setOverrideCursor(Qt.WaitCursor)

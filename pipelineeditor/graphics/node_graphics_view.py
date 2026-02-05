@@ -26,6 +26,7 @@ EDGE_SNAPPING_RADIUS = 12
 class QDMGraphicsView(QGraphicsView):
 
     scenePosChanged = pyqtSignal(int, int)
+    viewportTransformChanged = pyqtSignal()  # Emitted when zoom/pan changes
 
     def __init__(self, gr_scene, parent=None):
         super().__init__(parent)
@@ -165,6 +166,7 @@ class QDMGraphicsView(QGraphicsView):
         fake_event = QMouseEvent(event.type(), event.localPos(), event.screenPos(), Qt.LeftButton, event.buttons() | Qt.LeftButton, event.modifiers())
         super().mouseReleaseEvent(fake_event)
         self.setDragMode(QGraphicsView.RubberBandDrag)
+        self.viewportTransformChanged.emit()
 
     def leftMouseButtonPress(self, event):
         item = self.getItemAtClick(event)
@@ -358,6 +360,7 @@ class QDMGraphicsView(QGraphicsView):
 
         if not clamped or not self.zoom_clamp:
             self.scale(zoom_factor, zoom_factor)
+            self.viewportTransformChanged.emit()
 
     def getItemAtClick(self, event):
         return self.itemAt(event.pos())
